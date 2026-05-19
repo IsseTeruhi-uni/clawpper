@@ -1,0 +1,13 @@
+# Build artifacts
+flipper-app/dist/
+flipper-app/.vscode/compile_commands.json
+
+# ufbt build cache
+.ufbt/
+
+# Python
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store

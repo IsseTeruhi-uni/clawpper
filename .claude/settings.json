@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": ["Bash(*)", "Edit(*)", "Write(*)", "MultiEdit(*)", "WebFetch(*)", "WebSearch(*)"]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py CONFIRM"}]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py CONFIRM"}]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py CONFIRM"}]
+      },
+      {
+        "matcher": "MultiEdit",
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py CONFIRM"}]
+      },
+      {
+        "matcher": "WebFetch",
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py CONFIRM"}]
+      },
+      {
+        "matcher": "WebSearch",
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py CONFIRM"}]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py NOTIFY"}]
+      }
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+App(
+    appid="clawpper",
+    name="Clawpper",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="clawpper_app",
+    requires=["gui"],
+    stack_size=2 * 1024,
+fap_category="Tools",
+)
