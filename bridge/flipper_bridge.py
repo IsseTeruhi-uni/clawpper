@@ -108,6 +108,23 @@ def build_confirm(stdin_data):
             ("No",  "deny"),
         ]
         state = "searching"
+    elif tool_name == "Agent":
+        desc = (tool_input.get("description", "") or "Sub-agent")[:36]
+        title = f"Agent: {desc}"
+        options = [
+            ("Yes", "allow"),
+            ("No",  "deny"),
+        ]
+        state = "running"
+    elif tool_name.startswith("mcp__"):
+        parts = tool_name.split("__", 2)
+        label = f"{parts[1]}/{parts[2]}" if len(parts) >= 3 else tool_name
+        title = f"MCP: {label[:40]}"
+        options = [
+            ("Yes", "allow"),
+            ("No",  "deny"),
+        ]
+        state = "running"
     else:
         title = tool_name or "Action"
         options = [

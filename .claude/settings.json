@@ -27,6 +27,22 @@
       {
         "matcher": "WebSearch",
         "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py CONFIRM"}]
+      },
+      {
+        "matcher": "NotebookEdit",
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py CONFIRM"}]
+      },
+      {
+        "matcher": "Agent",
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py CONFIRM"}]
+      },
+      {
+        "matcher": "mcp__*",
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py CONFIRM"}]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE searching"}]
       }
     ],
     "PostToolUse": [
@@ -52,6 +68,22 @@
       },
       {
         "matcher": "WebSearch",
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE thinking"}]
+      },
+      {
+        "matcher": "NotebookEdit",
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE thinking"}]
+      },
+      {
+        "matcher": "Agent",
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE thinking"}]
+      },
+      {
+        "matcher": "mcp__*",
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE thinking"}]
+      },
+      {
+        "matcher": "Read",
         "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE thinking"}]
       }
     ],
