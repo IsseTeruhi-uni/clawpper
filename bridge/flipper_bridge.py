@@ -211,7 +211,9 @@ def send_and_wait(mode, title, options=None, state=None):
             cmd = f"claude_notify {title}\r\n"
             log(f"Sending: {cmd.strip()}")
             os.write(fd, cmd.encode())
-            time.sleep(1.0)
+            time.sleep(2.0)  # Let Complete display briefly, then switch to Running
+            _send_state(fd, "running")
+            time.sleep(0.3)
             os.close(fd)
             sys.exit(0)
 
