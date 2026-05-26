@@ -29,6 +29,32 @@
         "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py CONFIRM"}]
       }
     ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE waiting"}]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE waiting"}]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE waiting"}]
+      },
+      {
+        "matcher": "MultiEdit",
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE waiting"}]
+      },
+      {
+        "matcher": "WebFetch",
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE waiting"}]
+      },
+      {
+        "matcher": "WebSearch",
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE waiting"}]
+      }
+    ],
     "Stop": [
       {
         "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py NOTIFY"}]

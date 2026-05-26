@@ -66,9 +66,10 @@ def read_stdin_json():
 
 
 def build_confirm(stdin_data):
-    """Build a title and option list based on the tool being confirmed.
+    """Build a title, option list, and post-approve state based on the tool.
     Each option is a (label, action) tuple.
     Actions: "allow" | "allow_always" | "deny"
+    Returns: (title, options, state)
     """
     tool_name = stdin_data.get("tool_name", "")
     tool_input = stdin_data.get("tool_input", {})
@@ -88,7 +89,8 @@ def build_confirm(stdin_data):
             ("Yes, allow all bash (session)", "allow_always"),
             ("No",                           "deny"),
         ]
-    elif tool_name in ("Write", "Edit", "NotebookEdit") or "file_path" in tool_input:
+        state = "running"
+    elif tool_name in ("Write", "Edit", "MultiEdit", "NotebookEdit") or "file_path" in tool_input:
         path = tool_input.get("file_path", "")
         fname = os.path.basename(path)[:36]
         title = f"Edit: {fname}"
@@ -97,21 +99,24 @@ def build_confirm(stdin_data):
             ("Yes, allow file edits (session)",  "allow_always"),
             ("No",                               "deny"),
         ]
-    elif tool_name == "WebFetch" or "url" in tool_input:
+        state = "editing"
+    elif tool_name in ("WebFetch", "WebSearch") or "url" in tool_input:
         url = tool_input.get("url", "")[:40]
         title = f"Fetch: {url}"
         options = [
             ("Yes", "allow"),
             ("No",  "deny"),
         ]
+        state = "searching"
     else:
         title = tool_name or "Action"
         options = [
             ("Yes", "allow"),
             ("No",  "deny"),
         ]
+        state = "running"
 
-    return title, options
+    return title, options, state
 
 
 def build_notify_message(stdin_data):
@@ -146,7 +151,33 @@ def _last_assistant_text(path):
     return last
 
 
-def send_and_wait(mode, title, options=None):
+def _send_state(fd, state):
+    cmd = f"claude_state {state}\r\n"
+    log(f"Sending state: {state}")
+    os.write(fd, cmd.encode())
+    time.sleep(0.2)
+
+
+def send_state_only(state):
+    port = find_flipper_port()
+    if not port:
+        log("Flipper port not found — skipping")
+        sys.exit(0)
+    log(f"Found port: {port}")
+    try:
+        fd = open_serial(port)
+        time.sleep(0.3)
+        drain(fd)
+        _send_state(fd, state)
+        time.sleep(0.3)
+        os.close(fd)
+        sys.exit(0)
+    except Exception as e:
+        log(f"Exception: {e}")
+        sys.exit(0)
+
+
+def send_and_wait(mode, title, options=None, state=None):
     port = find_flipper_port()
     if not port:
         log("Flipper port not found — skipping")
@@ -169,6 +200,8 @@ def send_and_wait(mode, title, options=None):
 
         # Check session-wide allow flag
         if os.path.exists(ALLOW_ALWAYS_FLAG):
+            if state:
+                _send_state(fd, state)
             os.close(fd)
             log("Allow-always flag set — skipping Flipper")
             sys.exit(0)
@@ -192,14 +225,20 @@ def send_and_wait(mode, title, options=None):
                     buf += chunk
                     for i, (label, action) in enumerate(options):
                         if f"CHOICE:{i}".encode() in buf:
-                            os.close(fd)
                             log(f"Choice {i} ({label}) → {action}")
                             if action == "allow_always":
                                 open(ALLOW_ALWAYS_FLAG, "w").close()
+                                if state:
+                                    _send_state(fd, state)
+                                os.close(fd)
                                 sys.exit(0)
                             elif action == "allow":
+                                if state:
+                                    _send_state(fd, state)
+                                os.close(fd)
                                 sys.exit(0)
                             else:
+                                os.close(fd)
                                 sys.exit(2)
 
         os.close(fd)
@@ -216,8 +255,11 @@ if __name__ == "__main__":
     stdin_data = read_stdin_json()
 
     if mode == "CONFIRM":
-        title, options = build_confirm(stdin_data)
-        send_and_wait("CONFIRM", title, options)
+        title, options, state = build_confirm(stdin_data)
+        send_and_wait("CONFIRM", title, options, state)
+    elif mode == "STATE":
+        state = sys.argv[2] if len(sys.argv) > 2 else "waiting"
+        send_state_only(state)
     else:
         title = build_notify_message(stdin_data)
         send_and_wait("NOTIFY", title)
