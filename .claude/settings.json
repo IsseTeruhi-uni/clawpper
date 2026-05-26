@@ -57,7 +57,7 @@
     ],
     "Stop": [
       {
-        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE waiting"}]
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py NOTIFY"}]
       }
     ]
   }

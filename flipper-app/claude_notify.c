@@ -129,9 +129,14 @@ static void draw_clawd(Canvas* canvas, uint8_t f, IdleState state) {
         canvas_draw_frame(canvas, CX + 20, CY + 3, 5, 5);
         break;
     case StateThinking:
-        // Left arm raised (hand near cheek), right arm low
-        canvas_draw_box(canvas, CX - 5, CY + 6,  5, 4); // left arm raised
-        canvas_draw_box(canvas, CX + 27, CY + 11, 5, 4); // right arm hanging
+        // Alternating arms (rocking/pondering motion)
+        if(f % 2 == 0) {
+            canvas_draw_box(canvas, CX - 5,  CY + 6,  5, 4); // left arm raised
+            canvas_draw_box(canvas, CX + 27, CY + 11, 5, 4); // right arm low
+        } else {
+            canvas_draw_box(canvas, CX - 5,  CY + 11, 5, 4); // left arm low
+            canvas_draw_box(canvas, CX + 27, CY + 6,  5, 4); // right arm raised
+        }
         break;
     default: // StateWaiting: typing animation (arms alternate up/down)
         if(f == 0 || f == 2) {
