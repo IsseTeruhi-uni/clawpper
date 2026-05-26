@@ -23,9 +23,13 @@
 // ====== State ======
 
 typedef enum {
-    StateWaiting  = 0,
-    StateComplete = 1,
-    StateConfirm  = 2,
+    StateWaiting   = 0,
+    StateComplete  = 1,
+    StateConfirm   = 2,
+    StateRunning   = 3,
+    StateEditing   = 4,
+    StateSearching = 5,
+    StateThinking  = 6,
 } IdleState;
 
 typedef struct {
@@ -100,6 +104,40 @@ static void draw_clawd(Canvas* canvas, uint8_t f, IdleState state) {
         canvas_draw_line(canvas, CX + 27, CY + 11, CX + 33, CY + 6); // right arm (angled up)
         canvas_draw_dot(canvas, CX + 34, CY + 5);
         break;
+    case StateRunning:
+        // Alternating arms (running motion)
+        if(f % 2 == 0) {
+            canvas_draw_box(canvas, CX - 5, CY + 5,  5, 4);  // left arm up
+            canvas_draw_box(canvas, CX + 27, CY + 11, 5, 4); // right arm down
+        } else {
+            canvas_draw_box(canvas, CX - 5,  CY + 11, 5, 4); // left arm down
+            canvas_draw_box(canvas, CX + 27, CY + 5,  5, 4); // right arm up
+        }
+        break;
+    case StateEditing:
+        // Left arm at side, right arm raised (holding pen)
+        canvas_draw_box(canvas, CX - 5, CY + 11, 5, 4);              // left arm
+        canvas_draw_line(canvas, CX + 27, CY + 9, CX + 33, CY + 3); // right arm raised
+        canvas_draw_dot(canvas, CX + 34, CY + 2);                    // pen tip
+        break;
+    case StateSearching:
+        // Both arms raised (binoculars pose)
+        canvas_draw_line(canvas, CX - 1,  CY + 10, CX - 5, CY + 5);
+        canvas_draw_line(canvas, CX + 28, CY + 10, CX + 32, CY + 5);
+        // Binoculars lenses (frames over eyes)
+        canvas_draw_frame(canvas, CX + 2,  CY + 3, 5, 5);
+        canvas_draw_frame(canvas, CX + 20, CY + 3, 5, 5);
+        break;
+    case StateThinking:
+        // Alternating arms (rocking/pondering motion)
+        if(f % 2 == 0) {
+            canvas_draw_box(canvas, CX - 5,  CY + 6,  5, 4); // left arm raised
+            canvas_draw_box(canvas, CX + 27, CY + 11, 5, 4); // right arm low
+        } else {
+            canvas_draw_box(canvas, CX - 5,  CY + 11, 5, 4); // left arm low
+            canvas_draw_box(canvas, CX + 27, CY + 6,  5, 4); // right arm raised
+        }
+        break;
     default: // StateWaiting: typing animation (arms alternate up/down)
         if(f == 0 || f == 2) {
             // Arms down (pressing keys)
@@ -133,6 +171,35 @@ static void draw_monitor(Canvas* canvas, uint8_t f, IdleState state) {
         canvas_set_font(canvas, FontPrimary);
         canvas_draw_str(canvas, MX + 22, MY + 18, "?");
         break;
+    case StateRunning: {
+        // Spinner animation
+        static const char* const spin[] = {"-", "/", "|", "\\"};
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str(canvas, MX + 24, MY + 17, spin[f]);
+        break;
+    }
+    case StateEditing: {
+        // Static top line + growing second line with blinking cursor
+        uint8_t len = (uint8_t)(10 + f * 10);
+        if(len > 42) len = 42;
+        canvas_draw_line(canvas, MX + 4, MY + 8,  MX + 44, MY + 8);
+        canvas_draw_line(canvas, MX + 4, MY + 14, MX + 4 + len, MY + 14);
+        if(f % 2 == 0) canvas_draw_box(canvas, MX + 5 + len, MY + 12, 2, 4);
+        break;
+    }
+    case StateSearching:
+        // Magnifying glass
+        canvas_draw_circle(canvas, MX + 22, MY + 12, 7);
+        canvas_draw_line(canvas, MX + 27, MY + 17, MX + 33, MY + 22);
+        canvas_draw_line(canvas, MX + 28, MY + 17, MX + 34, MY + 22);
+        break;
+    case StateThinking: {
+        // Blinking ellipsis (Claude reasoning)
+        static const char* const ellipsis[] = {".", "..", "...", ".."};
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str(canvas, MX + 18, MY + 17, ellipsis[f]);
+        break;
+    }
     default: { // StateWaiting
         // Animated code lines (max 44px to fill wider screen)
         uint8_t l1 = 16 + (f >= 1 ? 10 : 0) + (f >= 3 ? 6 : 0);
@@ -186,6 +253,26 @@ static void idle_draw_callback(Canvas* canvas, void* _model) {
     case StateConfirm:
         canvas_draw_str(canvas, 2, 62, "Confirm?");
         break;
+    case StateRunning: {
+        static const char* const dots[] = {"Running.", "Running..", "Running...", "Running.."};
+        canvas_draw_str(canvas, 2, 62, dots[m->frame]);
+        break;
+    }
+    case StateEditing: {
+        static const char* const dots[] = {"Editing.", "Editing..", "Editing...", "Editing.."};
+        canvas_draw_str(canvas, 2, 62, dots[m->frame]);
+        break;
+    }
+    case StateSearching: {
+        static const char* const dots[] = {"Searching.", "Searching..", "Searching...", "Searching.."};
+        canvas_draw_str(canvas, 2, 62, dots[m->frame]);
+        break;
+    }
+    case StateThinking: {
+        static const char* const dots[] = {"Thinking.", "Thinking..", "Thinking...", "Thinking.."};
+        canvas_draw_str(canvas, 2, 62, dots[m->frame]);
+        break;
+    }
     default: {
         static const char* const dots[] = {"Waiting.", "Waiting..", "Waiting...", "Waiting.."};
         canvas_draw_str(canvas, 2, 62, dots[m->frame]);
@@ -271,6 +358,26 @@ static void cli_notify_handler(PipeSide* pipe, FuriString* args, void* context) 
         },
         true);
     notification_message(app->notifications, &sequence_single_vibro);
+}
+
+static void cli_state_handler(PipeSide* pipe, FuriString* args, void* context) {
+    UNUSED(pipe);
+    ClaudeNotifyApp* app = context;
+    const char* s = furi_string_get_cstr(args);
+    IdleState new_state = StateWaiting;
+    if(strcmp(s, "running") == 0)        new_state = StateRunning;
+    else if(strcmp(s, "editing") == 0)   new_state = StateEditing;
+    else if(strcmp(s, "searching") == 0) new_state = StateSearching;
+    else if(strcmp(s, "thinking") == 0)  new_state = StateThinking;
+    else if(strcmp(s, "complete") == 0)  new_state = StateComplete;
+    with_view_model(
+        app->idle_view,
+        IdleModel* model,
+        {
+            model->state        = new_state;
+            model->state_frames = 0;
+        },
+        true);
 }
 
 static void cli_confirm_handler(PipeSide* pipe, FuriString* args, void* context) {
@@ -381,14 +488,17 @@ int32_t clawpper_app(void* p) {
     furi_timer_start(app->anim_timer, ANIM_MS);
 
     cli_registry_add_command(
-        app->cli, "claude_notify", CliCommandFlagParallelSafe, cli_notify_handler, app);
+        app->cli, "claude_notify",  CliCommandFlagParallelSafe, cli_notify_handler,  app);
     cli_registry_add_command(
         app->cli, "claude_confirm", CliCommandFlagParallelSafe, cli_confirm_handler, app);
+    cli_registry_add_command(
+        app->cli, "claude_state",   CliCommandFlagParallelSafe, cli_state_handler,   app);
 
     view_dispatcher_run(app->view_dispatcher);
 
     cli_registry_delete_command(app->cli, "claude_notify");
     cli_registry_delete_command(app->cli, "claude_confirm");
+    cli_registry_delete_command(app->cli, "claude_state");
 
     furi_timer_stop(app->anim_timer);
     furi_timer_free(app->anim_timer);
