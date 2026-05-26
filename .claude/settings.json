@@ -32,32 +32,32 @@
     "PostToolUse": [
       {
         "matcher": "Bash",
-        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE waiting"}]
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE thinking"}]
       },
       {
         "matcher": "Edit",
-        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE waiting"}]
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE thinking"}]
       },
       {
         "matcher": "Write",
-        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE waiting"}]
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE thinking"}]
       },
       {
         "matcher": "MultiEdit",
-        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE waiting"}]
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE thinking"}]
       },
       {
         "matcher": "WebFetch",
-        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE waiting"}]
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE thinking"}]
       },
       {
         "matcher": "WebSearch",
-        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE waiting"}]
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE thinking"}]
       }
     ],
     "Stop": [
       {
-        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py NOTIFY"}]
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/flipper_bridge.py STATE waiting"}]
       }
     ]
   }

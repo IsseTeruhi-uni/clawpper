@@ -29,6 +29,7 @@ typedef enum {
     StateRunning   = 3,
     StateEditing   = 4,
     StateSearching = 5,
+    StateThinking  = 6,
 } IdleState;
 
 typedef struct {
@@ -127,6 +128,12 @@ static void draw_clawd(Canvas* canvas, uint8_t f, IdleState state) {
         canvas_draw_frame(canvas, CX + 2,  CY + 3, 5, 5);
         canvas_draw_frame(canvas, CX + 20, CY + 3, 5, 5);
         break;
+    case StateThinking:
+        // Left arm raised to cheek (hand on cheek), right arm hanging
+        canvas_draw_line(canvas, CX - 1, CY + 10, CX - 5, CY + 5); // left arm angled up
+        canvas_draw_dot(canvas, CX - 6, CY + 4);                    // fingertip at cheek
+        canvas_draw_box(canvas, CX + 27, CY + 10, 5, 4);            // right arm at side
+        break;
     default: // StateWaiting: typing animation (arms alternate up/down)
         if(f == 0 || f == 2) {
             // Arms down (pressing keys)
@@ -182,6 +189,13 @@ static void draw_monitor(Canvas* canvas, uint8_t f, IdleState state) {
         canvas_draw_line(canvas, MX + 27, MY + 17, MX + 33, MY + 22);
         canvas_draw_line(canvas, MX + 28, MY + 17, MX + 34, MY + 22);
         break;
+    case StateThinking: {
+        // Blinking ellipsis (Claude reasoning)
+        static const char* const ellipsis[] = {".", "..", "...", ".."};
+        canvas_set_font(canvas, FontPrimary);
+        canvas_draw_str(canvas, MX + 18, MY + 17, ellipsis[f]);
+        break;
+    }
     default: { // StateWaiting
         // Animated code lines (max 44px to fill wider screen)
         uint8_t l1 = 16 + (f >= 1 ? 10 : 0) + (f >= 3 ? 6 : 0);
@@ -247,6 +261,11 @@ static void idle_draw_callback(Canvas* canvas, void* _model) {
     }
     case StateSearching: {
         static const char* const dots[] = {"Searching.", "Searching..", "Searching...", "Searching.."};
+        canvas_draw_str(canvas, 2, 62, dots[m->frame]);
+        break;
+    }
+    case StateThinking: {
+        static const char* const dots[] = {"Thinking.", "Thinking..", "Thinking...", "Thinking.."};
         canvas_draw_str(canvas, 2, 62, dots[m->frame]);
         break;
     }
@@ -345,6 +364,7 @@ static void cli_state_handler(PipeSide* pipe, FuriString* args, void* context) {
     if(strcmp(s, "running") == 0)        new_state = StateRunning;
     else if(strcmp(s, "editing") == 0)   new_state = StateEditing;
     else if(strcmp(s, "searching") == 0) new_state = StateSearching;
+    else if(strcmp(s, "thinking") == 0)  new_state = StateThinking;
     else if(strcmp(s, "complete") == 0)  new_state = StateComplete;
     with_view_model(
         app->idle_view,
